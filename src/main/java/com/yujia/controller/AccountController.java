@@ -3,11 +3,13 @@ package com.yujia.controller;
 import com.yujia.annotation.Autowired;
 import com.yujia.annotation.Controller;
 import com.yujia.annotation.RequestMapping;
+import com.yujia.annotation.Security;
 import com.yujia.model.bo.TransferAccountBO;
 import com.yujia.model.pojo.Result;
 import com.yujia.service.IAccountService;
 
 @Controller
+@Security({"zhangsan","lisi","wangwu"})
 @RequestMapping(value = "/account")
 public class AccountController {
 
@@ -32,8 +34,20 @@ public class AccountController {
         return result;
     }
 
-    @RequestMapping(value = "/test")
-    public String test(String name, String age) {
-        return "name=" + name + ", age=" + age;
+    @Security("zhangsan")
+    @RequestMapping(value = "/test1")
+    public String test1(String username, String age) {
+        return "username=" + username + ", age=" + age;
+    }
+
+    @Security("lisi")
+    @RequestMapping(value = "/test2")
+    public String test2(String username, String sex) {
+        return "username=" + username + ", sex=" + sex;
+    }
+
+    @RequestMapping(value = "/test3")
+    public String test3(String username, String high) {
+        return "username=" + username + ", high=" + high;
     }
 }

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Data
@@ -17,5 +18,6 @@ public class Handle {
     private Method method;
     private Object object;
     private Pattern pattern;
+    private Set<String> securities;
     private Map<String, Integer> parameterIndexMap;
 }

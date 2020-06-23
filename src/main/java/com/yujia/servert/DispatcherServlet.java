@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Set;
 
 public class DispatcherServlet extends HttpServlet {
 
@@ -37,6 +38,16 @@ public class DispatcherServlet extends HttpServlet {
         if (handle == null) {
 //            throw new ServletException("404 not found : " + req.getRequestURI());
             resp.getWriter().write("404 not found");
+            return;
+        }
+        // 权限校验
+        String username = req.getParameter("username");
+        Set<String> securities = handle.getSecurities();
+        if (securities != null) {
+            if (StringUtils.isBlank(username) || !securities.contains(username)) {
+                resp.getWriter().write("has no securities");
+                return;
+            }
         }
         Object[] parameters = new Object[handle.getMethod().getParameters().length];
         Integer index = null;

@@ -3,6 +3,7 @@ package com.yujia.factory;
 import com.yujia.annotation.Autowired;
 import com.yujia.annotation.Controller;
 import com.yujia.annotation.RequestMapping;
+import com.yujia.annotation.Security;
 import com.yujia.factory.model.Handle;
 import com.yujia.factory.utils.BeanUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -98,14 +99,38 @@ public class BeanFactory1 {
             // 类上请求路径
             classUrl = c.getAnnotation(RequestMapping.class).value();
         }
+        String[] handlerSecurities = null;
+        if (c.isAnnotationPresent(Security.class)) {
+            // Controller上权限
+            handlerSecurities = c.getAnnotation(Security.class).value();
+        }
+        final String[] controllerSecurities = handlerSecurities;
         Handle handle = null;
         String url;
+        Set<String> securities = null;
         Parameter[] parameters = null;
         Class<?> parameterType = null;
         Map<String, Integer> parameterIndexMap = null;
         List<Method> methods = Arrays.stream(c.getDeclaredMethods()).filter(method -> method.isAnnotationPresent(RequestMapping.class)).collect(Collectors.toList());
         for (Method method : methods) {
             url = classUrl + method.getAnnotation(RequestMapping.class).value();
+            // Handler上权限
+            if (method.isAnnotationPresent(Security.class)) {
+                handlerSecurities = method.getAnnotation(Security.class).value();
+                if (controllerSecurities != null) {
+                    securities = Arrays.stream(handlerSecurities)
+                            .filter(hs -> Arrays.stream(controllerSecurities)
+                                    .anyMatch(cs -> StringUtils.equals(hs, cs))).collect(Collectors.toSet());
+                } else {
+                    securities = new HashSet<>();
+                    Collections.addAll(securities, handlerSecurities);
+                }
+            } else {
+                if (controllerSecurities != null) {
+                    securities = new HashSet<>();
+                    Collections.addAll(securities, controllerSecurities);
+                }
+            }
             parameters = method.getParameters();
             if (ArrayUtils.isNotEmpty(parameters)) {
                 parameterIndexMap = new HashMap<>();
@@ -121,9 +146,11 @@ public class BeanFactory1 {
                 }
             }
 //            handle = Handle.builder().method(method).object(proxy).pattern(Pattern.compile(url)).parameterIndexMap(parameterIndexMap).build();
-            handle = Handle.builder().method(method).object(target).pattern(Pattern.compile(url)).parameterIndexMap(parameterIndexMap).build();
+            handle = Handle.builder().method(method).object(target).pattern(Pattern.compile(url)).securities(securities)
+                    .parameterIndexMap(parameterIndexMap).build();
             handleMapping.put(url, handle);
             parameterIndexMap = null;
+            securities = null;
         }
     }
 
